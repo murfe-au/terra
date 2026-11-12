@@ -214,6 +214,16 @@ textarea{width:100%;min-height:300px;padding:12px;border-radius:8px;border:1px s
     <div class="field"><label for="v1names">Crew names</label><input type="text" id="v1names" placeholder="e.g. D Murphy, S Nguyen"></div>
   </div>
   <div class="card">
+    <h2>Paramedic allergies</h2>
+    <div class="field"><span class="lbl">Any paramedic on this job with an allergy (all vehicles)?</span>
+      <div class="seg" data-seg="allergy"><button data-v="none">None known</button><button data-v="yes">Yes</button><button data-v="" class="on hide" aria-hidden="true"></button></div></div>
+    <div id="allergyFields" class="stack hide">
+      <div class="field"><label for="allergyTxt">Who and what</label><input type="text" id="allergyTxt" placeholder="e.g. S Nguyen – bee sting, anaphylaxis"></div>
+      <label class="check"><input type="checkbox" id="allergyKit"> Their adrenaline / medication is carried in the vehicle</label>
+    </div>
+    <p class="small muted">Asked fresh every job and not saved on the phone, so it can’t carry over to the wrong crew.</p>
+  </div>
+  <div class="card">
     <div class="field"><span class="lbl">Second ambulance vehicle</span>
       <div class="seg" data-seg="veh2"><button data-v="none" class="on">None</button><button data-v="4wd">Yes – 4WD</button><button data-v="other">Yes – not 4WD</button></div></div>
     <div id="veh2Fields" class="stack hide">
@@ -290,7 +300,7 @@ textarea{width:100%;min-height:300px;padding:12px;border-radius:8px;border:1px s
     <div class="slams">2 · Look</div>
     <p class="muted small">Tick what you can see on the route.</p>
     <div class="chips" data-chips="haz">
-      <button class="chip">Soft sand</button><button class="chip">Mud / wet clay</button><button class="chip">Fallen trees</button><button class="chip">Steep or rutted</button><button class="chip">Washouts</button><button class="chip">Locked gates</button><button class="chip">Dust / smoke</button><button class="chip">Beach users / swimmers</button>
+      <button class="chip">Soft sand</button><button class="chip">Mud / wet clay</button><button class="chip">Fallen trees</button><button class="chip">Steep or rutted</button><button class="chip">Washouts</button><button class="chip">Locked gates</button><button class="chip">Dust / smoke</button><button class="chip">Beach users / swimmers</button><button class="chip">Bees / wasps</button><button class="chip">Ticks</button><button class="chip">Snakes</button>
     </div>
   </div>
   <div class="card">
@@ -562,6 +572,7 @@ function readState(){
     v1num:$('v1num').value.trim(), v1names:$('v1names').value.trim(),
     veh2:seg('veh2'), v2num:$('v2num').value.trim(), v2names:$('v2names').value.trim(),
     convoy:seg('convoy'), convSvc:$('convSvc').value, convCs:$('convCs').value.trim(), convStay:$('convStay').checked,
+    allergy:seg('allergy'), allergyTxt:$('allergyTxt').value.trim(), allergyKit:$('allergyKit').checked,
     op:seg('op'), opLabel:segLabel('op'), sot:seg('sot'), sotLabel:segLabel('sot'), sotCs:$('sotCs').value.trim(),
     comms:COMMS.map(c=>({...c,car:$('car_'+c.k).checked,test:$('test_'+c.k).checked,extra:c.k==='grn'?$('tg_grn').value.trim():''})),
     checkin:+$('checkin').value,
@@ -624,6 +635,13 @@ function compute(){
     if(s.crossing==='yes') floor=true;
   }
   if(s.op==='neither') add(6,'No 4WD operator or manager');
+  if(!s.allergy) blocks.push('Answer the paramedic allergies question');
+  else if(s.allergy==='yes'){
+    if(!s.allergyTxt) blocks.push('Say who has the allergy and to what');
+    if(!s.allergyKit){add(6,'Paramedic allergy – medication not confirmed carried');floor=true;}
+    const trig=/bee|wasp|sting|insect|tick|snake|bite|pollen|plant/i.test(s.allergyTxt);
+    if(trig&&s.haz.some(h=>/Bees|Ticks|Snakes/.test(h))) add(4,'Allergy matches a hazard on the route');
+  }
   if(s.sot==='responding') add(-4,'Special Operations responding');
   const pc=pace(s);
   if(pc.count<2) flags.push(`Only ${pc.count} tested comms method${pc.count===1?'':'s'} on separate networks – need 2`);
@@ -678,6 +696,7 @@ function update(){
   $('customRow').classList.toggle('hide',$('locSel').value!=='custom');
   $('depthRow').classList.toggle('hide',s.crossing!=='yes');
   $('veh2Fields').classList.toggle('hide',s.veh2==='none');
+  $('allergyFields').classList.toggle('hide',s.allergy!=='yes');
   $('convoyFields').classList.toggle('hide',s.convoy!=='yes');
   $('sotCs').classList.toggle('hide',s.sot!=='responding');
   $('sotWinchRow').classList.toggle('hide',s.sot!=='notneeded');
@@ -723,7 +742,8 @@ function smsLines(r){
   L.push(`Veh 1 [${s.v1num||'—'}]: ${s.v1names||'—'}`);
   if(s.veh2!=='none') L.push(`Veh 2 [${s.v2num||'—'}]${s.veh2==='other'?' (not 4WD)':''}: ${s.v2names||'—'}`);
   if(s.convoy==='yes') L.push(`Convoy: ${s.convSvc} ${s.convCs}${s.convStay?' (staying for egress)':' (not staying)'}`);
-  L.push(`4WD op/Mgr: ${s.op==='neither'?'Neither':s.opLabel} | SOT: ${s.sotLabel}${s.sot==='responding'&&s.sotCs?' '+s.sotCs:''}`);
+  L.push(`Allergies: ${s.allergy==='yes'?(s.allergyTxt||'yes – not specified')+(s.allergyKit?' (meds carried)':' (meds NOT confirmed)'):s.allergy==='none'?'None known':'—'}`);
+  L.push(`4WD op/Mgr:${s.op==='neither'?'Neither':s.opLabel} | SOT: ${s.sotLabel}${s.sot==='responding'&&s.sotCs?' '+s.sotCs:''}`);
   L.push(`Job: ${s.job}`);
   L.push(`Staging: ${s.staging||'—'}`);
   L.push(`Last light ${r.SUN.dusk!=null?hmc(r.SUN.dusk):'—'} | TA ${hmc(s.ta)} | Out by ${hmc(r.out)}`);
@@ -826,7 +846,8 @@ function prepActive(r){
 const checkinMsg=r=>`TERRA CHECK-IN ${hmc(nowMin())} – Veh 1 [${r.s.v1num}] all OK at ${r.s.job}. Next check-in ${hmc(nowMin()+r.s.checkin)}. Overdue ${hmc(r.overdue)}.`;
 function resetJob(){
   stopTime=null; approval=null;
-  ['flowing','toban','sotWinch'].forEach(id=>$(id).checked=false);
+  ['flowing','toban','sotWinch','allergyKit'].forEach(id=>$(id).checked=false);
+  setSeg('allergy',''); $('allergyTxt').value='';
   setSeg('crossing','no'); setSeg('depth','unknown'); setSeg('fdr',''); setSeg('sot','notconsidered'); setSeg('convoy','no');
   document.querySelectorAll('.chip.on').forEach(c=>c.classList.remove('on'));
   COMMS.forEach(c=>{const t=$('test_'+c.k); if(t) t.checked=false;});
