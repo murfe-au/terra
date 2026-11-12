@@ -1,5 +1,5 @@
 // Caches the app itself so it opens with no signal. Forecast data is saved by the app (localStorage), not here.
-const CACHE = 'terra-v3';
+const CACHE = 'terra-v4';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

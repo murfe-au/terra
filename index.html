@@ -214,7 +214,11 @@ textarea{width:100%;min-height:300px;padding:12px;border-radius:8px;border:1px s
     <div class="field"><label for="v1names">Crew names</label><input type="text" id="v1names" placeholder="e.g. D Murphy, S Nguyen"></div>
   </div>
   <div class="card">
-    <h2>Paramedic allergies</h2>
+    <h2>Walking party &amp; allergies</h2>
+    <div class="field"><span class="lbl">All walking party fit for task?</span>
+      <div class="seg" data-seg="fit"><button data-v="yes">Yes – all fit</button><button data-v="no">No – not all fit</button><button data-v="" class="on hide" aria-hidden="true"></button></div>
+      <p class="small muted">Fit to walk in, carry a stretcher and walk out in today’s conditions: footwear, PPE, water, no injury or fatigue that stops them.</p></div>
+    <div id="fitFields" class="field hide"><label for="fitTxt">Who and what limits them</label><input type="text" id="fitTxt" placeholder="e.g. 1 crew can walk but not carry"></div>
     <div class="field"><span class="lbl">Any paramedic on this job with an allergy (all vehicles)?</span>
       <div class="seg" data-seg="allergy"><button data-v="none">None known</button><button data-v="yes">Yes</button><button data-v="" class="on hide" aria-hidden="true"></button></div></div>
     <div id="allergyFields" class="stack hide">
@@ -273,6 +277,7 @@ textarea{width:100%;min-height:300px;padding:12px;border-radius:8px;border:1px s
       <div class="field"><label for="bPoint">Pick-up point</label><input type="text" id="bPoint" placeholder="e.g. Kalaroo Rd gate"></div>
       <div class="field"><label for="bDist">Carry distance</label><input type="text" id="bDist" placeholder="e.g. 600 m"></div>
     </div>
+    <div id="bFitWarn" class="warn hide">Not all of the walking party is fit for task. Check the carry-out still works, or set “Enough carriers?” to No and request SES/RFS.</div>
     <div class="field"><span class="lbl">Enough carriers?</span>
       <div class="seg" data-seg="carriers"><button data-v="yes" class="on">Yes</button><button data-v="no">No – request SES/RFS</button></div></div>
     <div class="field"><span class="lbl">Switch to Plan B if…</span>
@@ -572,6 +577,7 @@ function readState(){
     v1num:$('v1num').value.trim(), v1names:$('v1names').value.trim(),
     veh2:seg('veh2'), v2num:$('v2num').value.trim(), v2names:$('v2names').value.trim(),
     convoy:seg('convoy'), convSvc:$('convSvc').value, convCs:$('convCs').value.trim(), convStay:$('convStay').checked,
+    fit:seg('fit'), fitTxt:$('fitTxt').value.trim(),
     allergy:seg('allergy'), allergyTxt:$('allergyTxt').value.trim(), allergyKit:$('allergyKit').checked,
     op:seg('op'), opLabel:segLabel('op'), sot:seg('sot'), sotLabel:segLabel('sot'), sotCs:$('sotCs').value.trim(),
     comms:COMMS.map(c=>({...c,car:$('car_'+c.k).checked,test:$('test_'+c.k).checked,extra:c.k==='grn'?$('tg_grn').value.trim():''})),
@@ -635,6 +641,11 @@ function compute(){
     if(s.crossing==='yes') floor=true;
   }
   if(s.op==='neither') add(6,'No 4WD operator or manager');
+  if(!s.fit) blocks.push('Confirm the walking party is fit for task');
+  else if(s.fit==='no'){
+    if(!s.fitTxt) blocks.push('Say who is not fit and why');
+    add(8,'Walking party not all fit for task'); floor=true;
+  }
   if(!s.allergy) blocks.push('Answer the paramedic allergies question');
   else if(s.allergy==='yes'){
     if(!s.allergyTxt) blocks.push('Say who has the allergy and to what');
@@ -697,6 +708,8 @@ function update(){
   $('depthRow').classList.toggle('hide',s.crossing!=='yes');
   $('veh2Fields').classList.toggle('hide',s.veh2==='none');
   $('allergyFields').classList.toggle('hide',s.allergy!=='yes');
+  $('fitFields').classList.toggle('hide',s.fit!=='no');
+  $('bFitWarn').classList.toggle('hide',s.fit!=='no');
   $('convoyFields').classList.toggle('hide',s.convoy!=='yes');
   $('sotCs').classList.toggle('hide',s.sot!=='responding');
   $('sotWinchRow').classList.toggle('hide',s.sot!=='notneeded');
@@ -742,7 +755,8 @@ function smsLines(r){
   L.push(`Veh 1 [${s.v1num||'—'}]: ${s.v1names||'—'}`);
   if(s.veh2!=='none') L.push(`Veh 2 [${s.v2num||'—'}]${s.veh2==='other'?' (not 4WD)':''}: ${s.v2names||'—'}`);
   if(s.convoy==='yes') L.push(`Convoy: ${s.convSvc} ${s.convCs}${s.convStay?' (staying for egress)':' (not staying)'}`);
-  L.push(`Allergies: ${s.allergy==='yes'?(s.allergyTxt||'yes – not specified')+(s.allergyKit?' (meds carried)':' (meds NOT confirmed)'):s.allergy==='none'?'None known':'—'}`);
+  L.push(`Walking party fit: ${s.fit==='yes'?'Yes – all fit':s.fit==='no'?'NO – '+(s.fitTxt||'not specified'):'—'}`);
+  L.push(`Allergies:${s.allergy==='yes'?(s.allergyTxt||'yes – not specified')+(s.allergyKit?' (meds carried)':' (meds NOT confirmed)'):s.allergy==='none'?'None known':'—'}`);
   L.push(`4WD op/Mgr:${s.op==='neither'?'Neither':s.opLabel} | SOT: ${s.sotLabel}${s.sot==='responding'&&s.sotCs?' '+s.sotCs:''}`);
   L.push(`Job: ${s.job}`);
   L.push(`Staging: ${s.staging||'—'}`);
@@ -847,7 +861,7 @@ const checkinMsg=r=>`TERRA CHECK-IN ${hmc(nowMin())} – Veh 1 [${r.s.v1num}] al
 function resetJob(){
   stopTime=null; approval=null;
   ['flowing','toban','sotWinch','allergyKit'].forEach(id=>$(id).checked=false);
-  setSeg('allergy',''); $('allergyTxt').value='';
+  setSeg('allergy',''); $('allergyTxt').value=''; setSeg('fit',''); $('fitTxt').value='';
   setSeg('crossing','no'); setSeg('depth','unknown'); setSeg('fdr',''); setSeg('sot','notconsidered'); setSeg('convoy','no');
   document.querySelectorAll('.chip.on').forEach(c=>c.classList.remove('on'));
   COMMS.forEach(c=>{const t=$('test_'+c.k); if(t) t.checked=false;});
