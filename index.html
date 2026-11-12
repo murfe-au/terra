@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d1316">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TERRA">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>TERRA – Terrain &amp; Environmental Risk Readiness Assessment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Night-cab operational tool: dark slate, cool accent, semantic G/A/R separate. One column, sticky header + footer. */
+  --bg:#0d1316; --surface:#162026; --surface-2:#1d2a31; --line:#2a3a42;
+  --text:#e7eff1; --muted:#8fa5ac; --accent:#6cc4d8; --accent-ink:#06232b;
+  --green:#3fbf86; --amber:#e8ab2c; --red:#ef5350;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:16px;line-height:1.4;-webkit-text-size-adjust:100%}
+.app{max-width:480px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:calc(10px + env(safe-area-inset-top)) 16px 8px}
+.hrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:.08em;line-height:1}
+.expand{display:block;margin-top:3px;font-family:var(--body);font-weight:500;font-size:11.5px;letter-spacing:.01em;color:var(--muted);line-height:1.2}
+.expand b{color:var(--accent);font-weight:700}
+.sub{display:block;margin-top:2px;font-family:var(--body);font-size:11px;color:var(--muted)}
+.score{font-family:var(--display);font-weight:700;font-size:16px;padding:4px 10px;border-radius:6px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.b-green{background:var(--green);color:#04210f}.b-amber{background:var(--amber);color:#2a1a00}.b-red{background:var(--red);color:#fff}
+.steps{display:flex;gap:4px;margin-top:8px}
+.steps i{flex:1;height:4px;border-radius:2px;background:var(--line)}
+.steps i.done{background:var(--accent)}
+.netbar{font-size:13px;padding:6px 16px;text-align:center}
+.net-off{background:rgba(232,171,44,.18);color:var(--amber)}
+.net-on{background:rgba(63,191,134,.14);color:var(--green)}
+main{flex:1;padding:16px 16px 120px;display:flex;flex-direction:column;gap:14px}
+section.screen{display:none;flex-direction:column;gap:14px}
+section.screen.active{display:flex}
+h1{font-family:var(--display);font-weight:700;font-size:28px;line-height:1.05;margin:0;text-wrap:balance}
+h2{font-family:var(--display);font-weight:600;font-size:18px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0}
+p{margin:0}
+a{color:var(--accent)}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field>label,.lbl{font-size:13px;font-weight:600;color:var(--muted);letter-spacing:.02em}
+input[type=text],input[type=time],select{width:100%;min-height:46px;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);color:var(--text);font:inherit;font-size:16px}
+input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button,.chip{flex:1 1 auto;min-height:46px;padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);color:var(--text);font:inherit;font-weight:600;font-size:15px;cursor:pointer}
+.seg button.on,.chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{flex:0 1 auto}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:12px 16px;border-radius:10px;border:0;font:inherit;font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:.03em;text-transform:uppercase;cursor:pointer;text-decoration:none;text-align:center}
+.btn-primary{background:var(--accent);color:var(--accent-ink)}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+.btn-green{background:var(--green);color:#04210f}.btn-amber{background:var(--amber);color:#2a1a00}.btn-red{background:var(--red);color:#fff}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+footer.nav{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--bg);border-top:1px solid var(--line)}
+footer.nav .inner{max-width:480px;margin:0 auto;padding:10px 16px calc(10px + env(safe-area-inset-bottom));display:grid;grid-template-columns:1fr 2fr;gap:10px}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kv div{background:var(--surface-2);border-radius:8px;padding:10px;min-width:0}
+.kv b{display:block;font-family:var(--display);font-size:21px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.15;overflow-wrap:anywhere}
+.kv span{font-size:12px;color:var(--muted)}
+.src{font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex:none}
+.dot.old{background:var(--amber)}.dot.none{background:var(--red)}
+.list{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.list li{display:flex;justify-content:space-between;gap:10px;font-size:15px}
+.list li b{font-variant-numeric:tabular-nums;text-align:right}
+.flag{border-left:4px solid var(--red);background:rgba(239,83,80,.12);padding:10px 12px;border-radius:6px;font-weight:600}
+.warn{border-left:4px solid var(--amber);background:rgba(232,171,44,.12);padding:10px 12px;border-radius:6px}
+.todo{border-left:4px solid var(--accent);background:rgba(108,196,216,.1);padding:10px 12px;border-radius:6px}
+.comms{display:flex;flex-direction:column;gap:8px}
+.crow{display:grid;grid-template-columns:30px 1fr auto auto;align-items:center;gap:8px;background:var(--surface-2);border-radius:8px;padding:8px 10px}
+.pace{font-family:var(--display);font-weight:700;font-size:18px;text-align:center;color:var(--muted)}
+.pace.set{color:var(--accent)}
+.tog{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);min-height:40px;cursor:pointer}
+.tog input{width:22px;height:22px;accent-color:var(--accent)}
+.big{display:flex;align-items:baseline;gap:12px}
+.big b{font-family:var(--display);font-size:64px;line-height:1;font-weight:700;font-variant-numeric:tabular-nums}
+.big span{font-family:var(--display);font-size:24px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.slams{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.06em;color:var(--accent);text-transform:uppercase}
+textarea{width:100%;min-height:300px;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);color:var(--text);font:14px/1.45 ui-monospace,Menlo,Consolas,monospace;resize:vertical}
+#cardImg{width:100%;border-radius:8px;border:1px solid var(--line)}
+.stack{display:flex;flex-direction:column;gap:10px}
+.hide{display:none!important}
+.foot{font-size:12px;color:var(--muted);text-align:center;padding:4px 0 0}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:15px;cursor:pointer}
+.check input{width:24px;height:24px;flex:none;accent-color:var(--accent)}
+.progress{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s}
+.rec{display:flex;justify-content:space-between;gap:8px;font-size:14px;padding:8px 0;border-top:1px solid var(--line)}
+.rec:first-child{border-top:0}
+.pill{font-family:var(--display);font-weight:700;font-size:13px;padding:2px 8px;border-radius:4px}
+@media (prefers-reduced-motion:reduce){.progress i{transition:none}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="hrow">
+    <div>
+      <div class="brand">TERRA</div>
+      <span class="expand"><b>T</b>errain &amp; <b>E</b>nvironmental <b>R</b>isk <b>R</b>eadiness <b>A</b>ssessment</span>
+      <span class="sub" id="hdrSub">4WD planning · pre-departure sync</span>
+    </div>
+    <div class="score b-green" id="hdrScore">—</div>
+  </div>
+  <div class="steps" id="steps"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+</header>
+<div class="netbar hide" id="netbar"></div>
+
+<main>
+<!-- 0 SYNC -->
+<section class="screen active" id="s-sync">
+  <h1>Sync before you lose coverage</h1>
+  <p class="muted">Downloads the forecast and tides for the job area so TERRA works with no signal. It re-syncs by itself whenever it’s open and has signal.</p>
+  <div class="card">
+    <div class="field"><label for="locSel">Job area</label>
+      <select id="locSel">
+        <option value="belmont">Belmont Wetlands SP / Nine Mile Beach</option>
+        <option value="bouddi">Bouddi NP / Maitland Bay</option>
+        <option value="gps">My current GPS location</option>
+        <option value="custom">Enter coordinates</option>
+      </select></div>
+    <div class="field hide" id="customRow"><label for="customLL">Latitude, longitude</label><input type="text" id="customLL" placeholder="-33.0200, 151.7100" inputmode="decimal"></div>
+    <ul class="list" id="syncList">
+      <li><span>Weather forecast (3 day, hourly)</span><b class="sv" data-k="wx">—</b></li>
+      <li><span>Tides &amp; waves</span><b class="sv" data-k="tide">—</b></li>
+      <li><span>Sun &amp; moon times</span><b>On phone</b></li>
+    </ul>
+    <div class="progress"><i id="syncBar"></i></div>
+    <div class="src"><span class="dot none" id="syncDot"></span><span id="syncTime">Not synced yet</span></div>
+    <div id="syncErr" class="warn hide"></div>
+  </div>
+  <button class="btn btn-ghost" id="btnSync">Sync now</button>
+  <button class="btn btn-primary" id="btnStart">Start new 4WD job</button>
+  <div class="card" id="recCard">
+    <h2>Recent jobs on this phone</h2>
+    <div id="recList"><p class="muted small">None yet.</p></div>
+  </div>
+</section>
+
+<!-- 1 JOB & ROUTE -->
+<section class="screen" id="s-job">
+  <h1>Job &amp; route</h1>
+  <div class="card">
+    <div class="field"><label for="jobLoc">Destination</label><input type="text" id="jobLoc"></div>
+    <div class="row2">
+      <div class="field"><label for="ta">Turnaround time</label><input type="time" id="ta" value="17:00"></div>
+      <div class="field"><label for="egress">Drive out takes</label>
+        <select id="egress"><option value="15">15 min</option><option value="30" selected>30 min</option><option value="45">45 min</option><option value="60">60 min</option><option value="90">90 min</option></select></div>
+    </div>
+    <div class="field"><span class="lbl">Beach or tidal access?</span>
+      <div class="seg" data-seg="beach"><button data-v="no">No</button><button data-v="yes" class="on">Yes</button></div></div>
+    <div class="field"><span class="lbl">Water crossing on route?</span>
+      <div class="seg" data-seg="crossing"><button data-v="no" class="on">No</button><button data-v="yes">Yes</button></div></div>
+    <div class="field hide" id="depthRow"><span class="lbl">Depth (wading limit 700 mm)</span>
+      <div class="seg" data-seg="depth"><button data-v="unknown" class="on">Not checked</button><button data-v="low">&lt; 500</button><button data-v="mid">500–700</button><button data-v="over">&gt; 700</button></div>
+      <label class="check" style="margin-top:6px"><input type="checkbox" id="flowing"> Water is flowing</label>
+    </div>
+    <div class="field"><span class="lbl">Fire danger rating today (crew check)</span>
+      <div class="seg" data-seg="fdr"><button data-v="None">No rating</button><button data-v="Moderate">Moderate</button><button data-v="High">High</button><button data-v="Extreme">Extreme</button><button data-v="Catastrophic">Catastrophic</button></div>
+      <label class="check" style="margin-top:6px"><input type="checkbox" id="toban"> Total fire ban declared</label>
+      <p class="small muted">Check on the <a href="https://www.rfs.nsw.gov.au/fire-information/fdr-and-tobans" target="_blank" rel="noopener">RFS fire danger page</a> while you have signal.</p>
+    </div>
+  </div>
+
+  <h2>Conditions for the job window</h2>
+  <div class="card">
+    <div class="kv">
+      <div><span>Sunset</span><b id="kSunset">—</b></div>
+      <div><span>Last light (civil)</span><b id="kDusk">—</b></div>
+      <div><span>Out by</span><b id="kOut">—</b></div>
+      <div><span>Moon</span><b id="kMoon" style="font-size:17px">—</b></div>
+    </div>
+    <div class="src"><span class="dot"></span>Sun &amp; moon calculated on this phone – works with no signal</div>
+    <div class="kv">
+      <div><span>Wind / max gust</span><b id="kWind">—</b></div>
+      <div><span>Rain chance (max)</span><b id="kRain">—</b></div>
+      <div><span>Weather</span><b id="kWx" style="font-size:17px">—</b></div>
+      <div><span>Max temp</span><b id="kTemp">—</b></div>
+      <div><span>Tides today</span><b id="kTide" style="font-size:16px">—</b></div>
+      <div><span>Max wave height</span><b id="kWave">—</b></div>
+    </div>
+    <div class="src"><span class="dot" id="wxDot"></span><span id="wxSrc">—</span></div>
+    <p class="small muted">Weather &amp; tides: Open-Meteo forecast models. Tide heights are modelled, not for navigation – check BOM tide tables for critical beach timing.</p>
+  </div>
+</section>
+
+<!-- 2 CREW & COMMS -->
+<section class="screen" id="s-crew">
+  <h1>Crew &amp; comms</h1>
+  <button class="btn btn-ghost" id="btnSameCrew">Same crew as last time</button>
+  <div class="card">
+    <h2>Vehicle 1</h2>
+    <div class="field"><label for="v1num">Vehicle number</label><input type="text" id="v1num" placeholder="e.g. 4WD 512"></div>
+    <div class="field"><label for="v1names">Crew names</label><input type="text" id="v1names" placeholder="e.g. D Murphy, S Nguyen"></div>
+  </div>
+  <div class="card">
+    <div class="field"><span class="lbl">Second ambulance vehicle</span>
+      <div class="seg" data-seg="veh2"><button data-v="none" class="on">None</button><button data-v="4wd">Yes – 4WD</button><button data-v="other">Yes – not 4WD</button></div></div>
+    <div id="veh2Fields" class="stack hide">
+      <div class="field"><label for="v2num">Vehicle 2 number</label><input type="text" id="v2num"></div>
+      <div class="field"><label for="v2names">Vehicle 2 crew names</label><input type="text" id="v2names"></div>
+    </div>
+    <div class="field"><span class="lbl">Other services’ 4WDs in convoy?</span>
+      <div class="seg" data-seg="convoy"><button data-v="no" class="on">No</button><button data-v="yes">Yes</button></div></div>
+    <div id="convoyFields" class="stack hide">
+      <div class="row2">
+        <div class="field"><label for="convSvc">Service</label><select id="convSvc"><option>SES</option><option>RFS</option><option>Police</option><option>NPWS</option><option>VRA</option><option>Other</option></select></div>
+        <div class="field"><label for="convCs">Call sign / vehicle</label><input type="text" id="convCs"></div>
+      </div>
+      <label class="check"><input type="checkbox" id="convStay" checked> Staying with us for the drive out</label>
+    </div>
+    <div class="field"><span class="lbl">4WD operator or manager attending</span>
+      <div class="seg" data-seg="op"><button data-v="op" class="on">4WD operator</button><button data-v="mgr">Manager</button><button data-v="both">Both</button><button data-v="neither">Neither</button></div></div>
+    <div class="field"><span class="lbl">Special Operations paramedics</span>
+      <div class="seg" data-seg="sot"><button data-v="responding">Responding</button><button data-v="notneeded">Considered – not needed</button><button data-v="unavail">Requested – unavailable</button><button data-v="notconsidered" class="on">Not considered</button></div>
+      <input type="text" id="sotCs" class="hide" placeholder="Call sign / ETA" aria-label="Special Operations call sign and ETA">
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Comms – need 2 tested</h2>
+    <p class="muted small">Methods on the same network count once. PLB is distress only and doesn’t count.</p>
+    <div class="comms" id="commsList"></div>
+    <div id="commsMsg"></div>
+    <div class="row2">
+      <div class="field"><label for="checkin">Check-in every</label><select id="checkin"><option value="15">15 min</option><option value="30" selected>30 min</option><option value="60">60 min</option></select></div>
+      <div class="field"><span class="lbl">Overdue time</span><div class="kv" style="grid-template-columns:1fr"><div><b id="kOverdue">—</b></div></div></div>
+    </div>
+    <p class="muted small">Overdue = turnaround + drive out + 30 min. The DOM holds it. If overdue: PACE → Control → Police SAR.</p>
+  </div>
+</section>
+
+<!-- 3 PLANS -->
+<section class="screen" id="s-plans">
+  <h1>Plans A, B &amp; C</h1>
+  <div class="card">
+    <h2>Plan A · Drive in and out</h2>
+    <ul class="list"><li><span>Route</span><b id="pA">—</b></li><li><span>Turnaround</span><b id="pAta">—</b></li></ul>
+  </div>
+  <div class="card">
+    <h2>Plan B · Carry out</h2>
+    <div class="row2">
+      <div class="field"><label for="bPoint">Pick-up point</label><input type="text" id="bPoint" placeholder="e.g. Kalaroo Rd gate"></div>
+      <div class="field"><label for="bDist">Carry distance</label><input type="text" id="bDist" placeholder="e.g. 600 m"></div>
+    </div>
+    <div class="field"><span class="lbl">Enough carriers?</span>
+      <div class="seg" data-seg="carriers"><button data-v="yes" class="on">Yes</button><button data-v="no">No – request SES/RFS</button></div></div>
+    <div class="field"><span class="lbl">Switch to Plan B if…</span>
+      <div class="seg" data-seg="bTrig"><button data-v="Vehicle can’t reach patient" class="on">Can’t reach patient</button><button data-v="Crossing over margin">Crossing too deep</button><button data-v="Track blocked">Track blocked</button><button data-v="Tide cuts off beach">Tide cuts off beach</button></div></div>
+  </div>
+  <div class="card">
+    <h2>Plan C · Helicopter winch</h2>
+    <div class="field"><label for="cSite">Winch site (read out to aircraft)</label><input type="text" id="cSite"></div>
+    <button class="btn btn-ghost" id="btnGpsWinch" style="min-height:44px;font-size:16px">Use my GPS position</button>
+    <div class="field"><span class="lbl">Switch to Plan C if…</span>
+      <div class="seg" data-seg="cTrig"><button data-v="Carry-out not possible" class="on">Carry-out not possible</button><button data-v="Patient deteriorating">Patient deteriorating</button><button data-v="A and B blocked">A &amp; B blocked</button></div></div>
+    <div id="cDark" class="warn hide">Job runs past last light. Check with Control that the helicopter is available and can winch at night.</div>
+    <label class="check hide" id="sotWinchRow"><input type="checkbox" id="sotWinch"> Special Operations not needed for winch – confirmed</label>
+  </div>
+</section>
+
+<!-- 4 STOP 5 -->
+<section class="screen" id="s-stop">
+  <h1>STOP 5</h1>
+  <div class="card">
+    <div class="slams">1 · Stop</div>
+    <p>Take two minutes. Step back from the job before you commit.</p>
+  </div>
+  <div class="card">
+    <div class="slams">2 · Look</div>
+    <p class="muted small">Tick what you can see on the route.</p>
+    <div class="chips" data-chips="haz">
+      <button class="chip">Soft sand</button><button class="chip">Mud / wet clay</button><button class="chip">Fallen trees</button><button class="chip">Steep or rutted</button><button class="chip">Washouts</button><button class="chip">Locked gates</button><button class="chip">Dust / smoke</button><button class="chip">Beach users / swimmers</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="slams">3 · Assess</div>
+    <div class="big"><b id="bigScore">0</b><span id="bigBand">Green</span><span class="muted" style="font-size:16px;text-transform:none">/ 60</span></div>
+    <div id="flagList" class="stack"></div>
+    <ul class="list" id="itemList"></ul>
+  </div>
+  <div class="card">
+    <div class="slams">4 · Manage</div>
+    <p class="muted small" id="manageHint">Pick at least one control for an amber job.</p>
+    <div class="chips" data-chips="ctl">
+      <button class="chip">Walk the crossing first</button><button class="chip">Turnaround briefed</button><button class="chip">Recovery gear checked</button><button class="chip">Tyres down for sand</button><button class="chip">Convoy briefed on Plan B</button><button class="chip">Lights &amp; spare checked</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="slams">5 · Safely proceed</div>
+    <div id="todoList" class="stack"></div>
+    <button class="btn" id="btnProceed">—</button>
+    <button class="btn btn-ghost hide" id="btnSendAnyway">Send summary to DOM anyway</button>
+  </div>
+</section>
+
+<!-- 5 SEND -->
+<section class="screen" id="s-send">
+  <h1>Send to DOM for approval</h1>
+  <p class="muted">Pick the Duty Operations Manager from your contacts when Messages opens.</p>
+  <textarea id="smsText" readonly aria-label="SMS text"></textarea>
+  <div class="row2">
+    <button class="btn btn-primary" id="btnCopy">Copy text</button>
+    <a class="btn btn-ghost" id="smsLink" href="#">Open Messages</a>
+  </div>
+  <p class="muted small" id="copyMsg">Open Messages fills in the text. Or copy it and paste.</p>
+  <button class="btn btn-ghost hide" id="btnShareImg">Share as image</button>
+  <img id="cardImg" alt="Job summary card for the DOM">
+  <p class="muted small">Press and hold the image to save or share it.</p>
+  <div class="card">
+    <h2>Record the DOM’s reply</h2>
+    <div class="field"><label for="domName">DOM name</label><input type="text" id="domName" placeholder="e.g. Insp. J Smith"></div>
+    <div class="row2">
+      <button class="btn btn-green" id="btnApproved">Approved</button>
+      <button class="btn btn-red" id="btnDeclined">Declined</button>
+    </div>
+    <div id="declineMsg" class="flag hide">Declined. Change the plan (route, comms, second vehicle) and run STOP 5 again.</div>
+  </div>
+</section>
+
+<!-- 6 ACTIVE -->
+<section class="screen" id="s-active">
+  <h1>Job underway</h1>
+  <div class="card">
+    <ul class="list">
+      <li><span>Status</span><b id="aBand">—</b></li>
+      <li><span>Approved by</span><b id="aBy">—</b></li>
+      <li><span>STOP 5 done</span><b id="aStop">—</b></li>
+      <li><span>Next check-in</span><b id="aNext">—</b></li>
+      <li><span>Turnaround</span><b id="aTa">—</b></li>
+      <li><span>Last light</span><b id="aDusk">—</b></li>
+      <li><span>Overdue</span><b id="aOver" style="color:var(--amber)">—</b></li>
+    </ul>
+  </div>
+  <div class="row2">
+    <button class="btn btn-ghost" id="btnCheckin">Copy check-in</button>
+    <a class="btn btn-ghost" id="checkinLink" href="#">Text check-in</a>
+  </div>
+  <button class="btn btn-amber" id="btnChanged">Conditions changed – re-check</button>
+  <div class="card">
+    <h2>When you’re out</h2>
+    <textarea id="clearText" readonly style="min-height:120px" aria-label="Clear message"></textarea>
+    <div class="row2">
+      <button class="btn btn-green" id="btnCopyClear">Copy “Clear”</button>
+      <a class="btn btn-ghost" id="clearLink" href="#">Open Messages</a>
+    </div>
+    <p class="muted small" id="clearMsg">Send this to the DOM to stand down the overdue watch.</p>
+  </div>
+  <button class="btn btn-ghost" id="btnNewJob">Finish &amp; start new job</button>
+</section>
+
+<p class="foot">TERRA · training use · not an approved NSW Ambulance tool<br>Weather data by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> (CC BY 4.0)</p>
+</main>
+
+<footer class="nav hide" id="nav">
+  <div class="inner">
+    <button class="btn btn-ghost" id="btnBack">Back</button>
+    <button class="btn btn-primary" id="btnNext">Next</button>
+  </div>
+</footer>
+</div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const TZ='Australia/Sydney';
+const PRESETS={
+  belmont:{name:'Nine Mile Beach, Belmont Wetlands SP',lat:-33.0200,lng:151.7100,mlat:-33.0300,mlng:151.7600,beach:true},
+  bouddi:{name:'Maitland Bay Track, Bouddi NP',lat:-33.5362,lng:151.3914,mlat:-33.5400,mlng:151.4300,beach:false}
+};
+const SCREENS=['sync','job','crew','plans','stop','send','active'];
+const SUB=['4WD planning · pre-departure sync','1 of 4 · Job & route','2 of 4 · Crew & comms','3 of 4 · Plans A, B & C','4 of 4 · STOP 5','Approval','Underway'];
+const COMMS=[
+ {k:'grn',name:'GRN radio',group:'grn',car:true,test:false},
+ {k:'mob',name:'Mobile phone',group:'cell',car:true,test:false},
+ {k:'mdt',name:'Vehicle data terminal',group:'cell',car:false,test:false},
+ {k:'sat',name:'Sat phone',group:'satphone',car:false,test:false},
+ {k:'msg',name:'Satellite messenger',group:'satmsg',car:false,test:false},
+ {k:'plb',name:'PLB (distress only)',group:null,car:false,test:false}
+];
+const KEY={data:'terra.data',crew:'terra.crew',recs:'terra.records',loc:'terra.loc'};
+const store={
+  get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){return false;}}
+};
+let cur=0, stopTime=null, approval=null, DATA=store.get(KEY.data,null), syncing=false;
+
+/* ---------- time helpers ---------- */
+const pad=n=>String(n).padStart(2,'0');
+const mod=(a,b)=>((a%b)+b)%b;
+const hm=m=>{m=mod(Math.round(m),1440);return pad(Math.floor(m/60))+':'+pad(m%60);};
+const hmc=m=>hm(m).replace(':','');
+const toMin=s=>{const [h,mi]=(s||'0:0').split(':').map(Number);return h*60+mi;};
+function localParts(d){
+  try{const o={};new Intl.DateTimeFormat('en-AU',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(d).forEach(x=>o[x.type]=x.value);
+    return {y:+o.year,m:+o.month,d:+o.day,h:+o.hour,mi:+o.minute};}
+  catch(e){return {y:d.getFullYear(),m:d.getMonth()+1,d:d.getDate(),h:d.getHours(),mi:d.getMinutes()};}
+}
+const nowMin=()=>{const p=localParts(new Date());return p.h*60+p.mi;};
+const todayStr=()=>{const p=localParts(new Date());return `${p.y}-${pad(p.m)}-${pad(p.d)}`;};
+const dayIndex=s=>Date.UTC(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10))/864e5;
+/* "YYYY-MM-DDTHH:MM" (local) -> minutes from today's local midnight */
+const isoMin=t=>(dayIndex(t)-dayIndex(todayStr()))*1440+(+t.slice(11,13))*60+(+t.slice(14,16));
+function ageText(ms){const m=Math.round(ms/60000);if(m<1)return 'just now';if(m<60)return m+' min ago';const h=Math.floor(m/60);return h+' h '+(m%60)+' min ago';}
+
+/* ---------- location ---------- */
+function currentLoc(){
+  if(DATA&&DATA.loc) return DATA.loc;
+  const sel=store.get(KEY.loc,'belmont');
+  return PRESETS[sel]||PRESETS.belmont;
+}
+
+/* ---------- sun & moon (on device) ---------- */
+function sunEvent(loc,zenith,rising){
+  const now=new Date(),NP=localParts(now);
+  const offMin=Math.round(((Date.UTC(NP.y,NP.m-1,NP.d,NP.h,NP.mi)-Math.floor(now.getTime()/60000)*60000)/60000)/15)*15;
+  const doy=(Date.UTC(NP.y,NP.m-1,NP.d)-Date.UTC(NP.y,0,0))/864e5;
+  const r=Math.PI/180, lngH=loc.lng/15, t=doy+((rising?6:18)-lngH)/24;
+  const M=0.9856*t-3.289;
+  const L=mod(M+1.916*Math.sin(M*r)+0.020*Math.sin(2*M*r)+282.634,360);
+  let RA=mod(Math.atan(0.91764*Math.tan(L*r))/r,360);
+  RA=(RA+(Math.floor(L/90)*90-Math.floor(RA/90)*90))/15;
+  const sinD=0.39782*Math.sin(L*r), cosD=Math.cos(Math.asin(sinD));
+  const cosH=(Math.cos(zenith*r)-sinD*Math.sin(loc.lat*r))/(cosD*Math.cos(loc.lat*r));
+  if(cosH>1||cosH<-1) return null;
+  const H=(rising?360-Math.acos(cosH)/r:Math.acos(cosH)/r)/15;
+  const UT=mod(H+RA-0.06571*t-6.622-lngH,24);
+  return mod(UT*60+offMin,1440);
+}
+function sun(){const l=currentLoc();return {sunset:sunEvent(l,90.833,false),dusk:sunEvent(l,96,false)};}
+function moon(){
+  const P=29.530588853, age=mod((Date.now()-Date.UTC(2000,0,6,18,14))/864e5,P);
+  const names=['New','Waxing crescent','First quarter','Waxing gibbous','Full','Waning gibbous','Last quarter','Waning crescent'];
+  return {name:names[Math.floor((age/P)*8+0.5)%8],illum:Math.round((1-Math.cos(2*Math.PI*age/P))/2*100)};
+}
+
+/* ---------- sync (Open-Meteo) ---------- */
+async function fetchJSON(url){
+  const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),15000);
+  try{const r=await fetch(url,{signal:ctl.signal,cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status); return await r.json();}
+  finally{clearTimeout(t);}
+}
+function getGPS(){
+  return new Promise((res,rej)=>{
+    if(!navigator.geolocation) return rej(new Error('GPS not available on this device'));
+    navigator.geolocation.getCurrentPosition(p=>res({lat:+p.coords.latitude.toFixed(4),lng:+p.coords.longitude.toFixed(4)}),e=>rej(new Error(e.message||'GPS refused')),{enableHighAccuracy:true,timeout:15000,maximumAge:60000});
+  });
+}
+async function resolveLoc(){
+  const sel=$('locSel').value;
+  if(PRESETS[sel]) return {...PRESETS[sel],key:sel};
+  if(sel==='custom'){
+    const m=$('customLL').value.match(/(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)/);
+    if(!m) throw new Error('Enter coordinates as: -33.0200, 151.7100');
+    return {name:'Custom location',lat:+(+m[1]).toFixed(4),lng:+(+m[2]).toFixed(4),beach:false,key:'custom'};
+  }
+  const g=await getGPS(); return {name:'GPS '+g.lat+', '+g.lng,lat:g.lat,lng:g.lng,beach:false,key:'gps'};
+}
+async function sync(opts={}){
+  if(syncing) return; syncing=true;
+  const silent=!!opts.silent, marks=[...document.querySelectorAll('#syncList .sv')];
+  if(!silent){$('syncErr').classList.add('hide');$('syncBar').style.width='15%';marks.forEach(m=>m.textContent='…');}
+  try{
+    const loc=opts.loc||await resolveLoc();
+    const q=`latitude=${loc.lat}&longitude=${loc.lng}&timezone=${encodeURIComponent(TZ)}&forecast_days=3`;
+    const wx=await fetchJSON(`https://api.open-meteo.com/v1/forecast?${q}&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=kmh`);
+    if(!silent){marks[0].textContent='✓';$('syncBar').style.width='60%';}
+    let marine=null;
+    // Tide model cells can be empty right on the shoreline: try a point just offshore, then further east.
+    const hasTide=m=>m&&m.hourly&&Array.isArray(m.hourly.sea_level_height_msl)&&m.hourly.sea_level_height_msl.some(v=>v!=null);
+    const tries=[[loc.mlat??loc.lat,loc.mlng??loc.lng],[loc.lat,loc.lng+0.06],[loc.lat,loc.lng+0.15]];
+    for(const [la,ln] of tries){
+      try{const m=await fetchJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${la.toFixed(4)}&longitude=${ln.toFixed(4)}&timezone=${encodeURIComponent(TZ)}&forecast_days=3&hourly=sea_level_height_msl,wave_height`);
+        if(hasTide(m)){marine=m;break;}}catch(e){}
+    }
+    if(!silent){marks[1].textContent=marine&&marine.hourly?'✓':'n/a';$('syncBar').style.width='100%';}
+    DATA={at:Date.now(),loc,wx,marine};
+    store.set(KEY.data,DATA);
+    if(loc.key) store.set(KEY.loc,loc.key);
+    applyLocDefaults(false);
+  }catch(e){
+    if(!silent){
+      $('syncBar').style.width='0';marks.forEach(m=>m.textContent='✗');
+      const el=$('syncErr');el.classList.remove('hide');
+      el.textContent=(navigator.onLine===false?'No signal. ':'Sync failed: '+e.message+'. ')+(DATA?`Still using data from ${ageText(Date.now()-DATA.at)}.`:'No forecast saved yet – sync before you leave coverage.');
+    }
+  }finally{syncing=false;renderSync();update();}
+}
+/* auto-sync when the app is open and has signal */
+function maybeAutoSync(){
+  if(navigator.onLine===false||syncing) return;
+  if(!DATA||Date.now()-DATA.at>20*60000){
+    const loc=DATA&&DATA.loc; // keep the job area already chosen; GPS presets re-use last fix
+    sync({silent:!!DATA,loc:loc||undefined});
+  }
+}
+
+/* ---------- derived conditions for the job window ---------- */
+const WCODE={0:'Clear',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Fog',51:'Drizzle',53:'Drizzle',55:'Drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',80:'Showers',81:'Showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm, hail',99:'Thunderstorm, hail'};
+const DIRS=['N','NE','E','SE','S','SW','W','NW'];
+function derive(start,end){
+  if(!DATA||!DATA.wx||!DATA.wx.hourly) return null;
+  if(end<=start) end=start+360;
+  const h=DATA.wx.hourly, idx=[];
+  h.time.forEach((t,i)=>{const m=isoMin(t); if(m>=Math.floor(start/60)*60&&m<=end) idx.push(i);});
+  if(!idx.length) return {empty:true};
+  const max=a=>Math.max(...idx.map(i=>a[i]??-Infinity));
+  const gi=idx.reduce((b,i)=>(h.wind_gusts_10m[i]??0)>(h.wind_gusts_10m[b]??0)?i:b,idx[0]);
+  const codes=idx.map(i=>h.weather_code[i]);
+  const worst=Math.max(...codes);
+  const out={gust:Math.round(max(h.wind_gusts_10m)),wind:Math.round(h.wind_speed_10m[gi]),dir:DIRS[Math.round((h.wind_direction_10m[gi]||0)/45)%8],
+    pop:Math.round(max(h.precipitation_probability)),temp:Math.round(max(h.temperature_2m)),storm:codes.some(c=>c>=95),wx:WCODE[worst]||'Code '+worst,
+    tides:[],wave:null};
+  const mh=DATA.marine&&DATA.marine.hourly;
+  if(mh&&mh.sea_level_height_msl&&mh.sea_level_height_msl.some(v=>v!=null)){
+    const v=mh.sea_level_height_msl,T=mh.time;
+    for(let i=1;i<v.length-1;i++){
+      if(v[i]==null||v[i-1]==null||v[i+1]==null) continue;
+      const hi=v[i]>v[i-1]&&v[i]>=v[i+1], lo=v[i]<v[i-1]&&v[i]<=v[i+1];
+      if(!hi&&!lo) continue;
+      const den=v[i-1]-2*v[i]+v[i+1], off=den?(v[i-1]-v[i+1])/(2*den):0;
+      const m=isoMin(T[i])+off*60;
+      if(m>=0&&m<1440+360) out.tides.push({type:hi?'H':'L',m,h:v[i]-den*off*off/4});
+    }
+    const wv=idx.map(i=>{const j=T.indexOf(h.time[i]);return j>=0?mh.wave_height[j]:null;}).filter(x=>x!=null);
+    if(wv.length) out.wave=Math.max(...wv);
+  }
+  return out;
+}
+const tideTxt=d=>d&&d.tides.length?d.tides.filter(t=>t.m<1440).map(t=>`${t.type} ${hm(t.m)} ${t.h.toFixed(1)}m`).join(' · '):'n/a';
+
+/* ---------- reading the form ---------- */
+const seg=n=>{const b=document.querySelector(`[data-seg="${n}"] .on`);return b?b.dataset.v:'';};
+const segLabel=n=>{const b=document.querySelector(`[data-seg="${n}"] .on`);return b?b.textContent:'';};
+const chips=n=>[...document.querySelectorAll(`[data-chips="${n}"] .chip.on`)].map(c=>c.textContent);
+function setSeg(n,v){const w=document.querySelector(`[data-seg="${n}"]`);if(!w)return;[...w.children].forEach(b=>b.classList.toggle('on',b.dataset.v===v));}
+function readState(){
+  return {
+    job:$('jobLoc').value.trim(), ta:toMin($('ta').value), egress:+$('egress').value,
+    beach:seg('beach')==='yes', crossing:seg('crossing'), depth:seg('depth'), flowing:$('flowing').checked,
+    fdr:seg('fdr'), toban:$('toban').checked,
+    v1num:$('v1num').value.trim(), v1names:$('v1names').value.trim(),
+    veh2:seg('veh2'), v2num:$('v2num').value.trim(), v2names:$('v2names').value.trim(),
+    convoy:seg('convoy'), convSvc:$('convSvc').value, convCs:$('convCs').value.trim(), convStay:$('convStay').checked,
+    op:seg('op'), opLabel:segLabel('op'), sot:seg('sot'), sotLabel:segLabel('sot'), sotCs:$('sotCs').value.trim(),
+    comms:COMMS.map(c=>({...c,car:$('car_'+c.k).checked,test:$('test_'+c.k).checked,extra:c.k==='grn'?$('tg_grn').value.trim():''})),
+    checkin:+$('checkin').value,
+    bPoint:$('bPoint').value.trim(), bDist:$('bDist').value.trim(), carriers:seg('carriers'), bTrig:seg('bTrig'),
+    cSite:$('cSite').value.trim(), cTrig:seg('cTrig'), sotWinch:$('sotWinch').checked,
+    haz:chips('haz'), ctl:chips('ctl')
+  };
+}
+function pace(s){
+  const seen=new Set(), out={}, L=['P','A','C'];
+  s.comms.forEach(c=>{
+    if(c.k==='plb'){ if(c.car) out[c.k]='E'; return; }
+    if(c.car&&c.test&&!seen.has(c.group)&&seen.size<3){ out[c.k]=L[seen.size]; seen.add(c.group); }
+  });
+  return {map:out,count:seen.size};
+}
+
+/* ---------- scoring ---------- */
+function compute(){
+  const s=readState(), items=[], flags=[], blocks=[]; let floor=false;
+  const add=(p,l)=>items.push({p,l});
+  const SUN=sun(), start=nowMin(), out=s.ta+s.egress, d=derive(start,out);
+  if(SUN.dusk!=null){
+    const margin=SUN.dusk-out;
+    if(margin<0) flags.push(`Drive out ends after last light (${hm(out)} vs ${hm(SUN.dusk)})`);
+    else if(margin<60) add(8,`Under 1 h of light spare (${margin} min)`);
+    else if(margin<120) add(4,'Under 2 h of light spare');
+  }
+  if(!DATA) flags.push('No forecast synced – sync before leaving coverage');
+  else{
+    const ageH=(Date.now()-DATA.at)/36e5;
+    if(ageH>12) add(8,`Forecast ${Math.floor(ageH)} h old`); else if(ageH>6) add(4,`Forecast ${Math.floor(ageH)} h old`);
+    if(d&&!d.empty){
+      if(d.gust>60) add(8,`Gusts to ${d.gust} km/h`); else if(d.gust>40) add(4,`Gusts to ${d.gust} km/h`);
+      if(d.storm){add(8,'Thunderstorm forecast');floor=true;}
+      else if(d.pop>=60) add(3,`Rain likely (${d.pop}%)`);
+      if(d.temp>=35) add(4,`Heat – max ${d.temp}°C`);
+      if(s.beach){
+        const hiNear=d.tides.filter(t=>t.type==='H'&&t.m>=start-120&&t.m<=out+120);
+        if(hiNear.length) add(6,`High tide ${hm(hiNear[0].m)} within 2 h of job`);
+        else add(2,'Beach access');
+        if(d.wave!=null&&d.wave>2.5) add(4,`Waves to ${d.wave.toFixed(1)} m`);
+      }
+    }
+  }
+  if(!s.fdr) blocks.push('Pick today’s fire danger rating');
+  else if(s.fdr==='Catastrophic') flags.push('Catastrophic fire danger');
+  else add({Moderate:2,High:5,Extreme:10}[s.fdr]||0,`Fire danger ${s.fdr}`);
+  if(s.crossing==='yes'){
+    if(s.depth==='unknown') flags.push('Crossing depth not checked – walk or probe it first');
+    else if(s.depth==='over') flags.push('Crossing deeper than 700 mm wading depth');
+    else if(s.depth==='mid'){add(10,'Crossing 500–700 mm');floor=true;}
+    else add(4,'Crossing under 500 mm');
+    if(s.flowing){add(6,'Flowing water');floor=true;}
+  }
+  s.haz.forEach(h=>add(3,h));
+  const convoyCounts=s.convoy==='yes'&&s.convStay;
+  if(!(s.veh2==='4wd'||convoyCounts)){
+    if(s.veh2==='other') add(5,'Second vehicle not 4WD'); else add(10,'Single vehicle');
+    if(s.crossing==='yes') floor=true;
+  }
+  if(s.op==='neither') add(6,'No 4WD operator or manager');
+  if(s.sot==='responding') add(-4,'Special Operations responding');
+  const pc=pace(s);
+  if(pc.count<2) flags.push(`Only ${pc.count} tested comms method${pc.count===1?'':'s'} on separate networks – need 2`);
+  if(!s.job) blocks.push('Add the destination');
+  if(!s.v1num) blocks.push('Add vehicle 1 number');
+  if(!s.v1names) blocks.push('Add crew names for vehicle 1');
+  if(s.veh2!=='none'&&!s.v2names) blocks.push('Add crew names for vehicle 2');
+  if(s.convoy==='yes'&&!s.convCs) blocks.push('Add the convoy vehicle call sign');
+  if(s.sot==='notconsidered') blocks.push('Consider Special Operations paramedics before proceeding');
+  if(!s.bPoint) blocks.push('Add the Plan B pick-up point');
+  if(!s.cSite) blocks.push('Add the Plan C winch site');
+  if(s.sot==='notneeded'&&!s.sotWinch) blocks.push('Confirm the winch plan without Special Operations');
+  let score=Math.max(0,Math.min(60,items.reduce((a,b)=>a+b.p,0)));
+  let band=score>=45?'red':score>=24?'amber':'green';
+  if(floor&&band==='green') band='amber';
+  if(flags.length) band='red';
+  if(band==='amber'&&!s.ctl.length) blocks.push('Pick at least one control under Manage');
+  return {s,items,flags,blocks,score,band,pc,out,overdue:out+30,d,SUN};
+}
+const BANDTXT={green:'Green',amber:'Amber',red:'Red'};
+
+/* ---------- comms rows ---------- */
+$('commsList').innerHTML=COMMS.map(c=>`
+  <div class="crow">
+    <div class="pace" id="pace_${c.k}">–</div>
+    <div><div style="font-weight:600">${c.name}</div>${c.k==='grn'?'<input type="text" id="tg_grn" placeholder="Talkgroup" aria-label="GRN talkgroup" style="min-height:36px;padding:6px 8px;margin-top:4px;font-size:14px">':''}</div>
+    <label class="tog"><input type="checkbox" id="car_${c.k}" ${c.car?'checked':''}>Carried</label>
+    ${c.k==='plb'?'<input type="checkbox" id="test_plb" class="hide"><span></span>':`<label class="tog"><input type="checkbox" id="test_${c.k}" ${c.test?'checked':''}>Tested</label>`}
+  </div>`).join('');
+
+/* ---------- render ---------- */
+function renderSync(){
+  const dot=$('syncDot');
+  if(DATA){
+    const age=Date.now()-DATA.at;
+    dot.className='dot'+(age>6*36e5?' old':'');
+    $('syncTime').textContent=`${DATA.loc.name} · synced ${ageText(age)}`;
+    document.querySelectorAll('#syncList .sv').forEach(m=>{ if(m.textContent==='—'||m.textContent==='…') m.textContent=m.dataset.k==='tide'&&!(DATA.marine&&DATA.marine.hourly)?'n/a':'✓'; });
+    $('syncBar').style.width='100%';
+  } else { dot.className='dot none'; $('syncTime').textContent='Not synced yet'; }
+  const nb=$('netbar');
+  if(navigator.onLine===false){nb.className='netbar net-off';nb.textContent=DATA?`No signal – using data from ${ageText(Date.now()-DATA.at)}`:'No signal – no forecast saved';}
+  else nb.className='netbar hide';
+  const recs=store.get(KEY.recs,[]);
+  $('recList').innerHTML=recs.length?recs.slice(0,5).map(r=>`<div class="rec"><span>${r.date} ${r.time} · ${esc(r.job)}<br><span class="muted small">${esc(r.crew)}${r.by?' · approved '+esc(r.by):''}</span></span><span class="pill b-${r.band}">${r.score}</span></div>`).join(''):'<p class="muted small">None yet.</p>';
+}
+const esc=t=>String(t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function update(){
+  const r=compute(), s=r.s, d=r.d;
+  const h=$('hdrScore'); h.className='score b-'+r.band; h.textContent=`${r.score}/60 ${BANDTXT[r.band].toUpperCase()}`;
+  $('customRow').classList.toggle('hide',$('locSel').value!=='custom');
+  $('depthRow').classList.toggle('hide',s.crossing!=='yes');
+  $('veh2Fields').classList.toggle('hide',s.veh2==='none');
+  $('convoyFields').classList.toggle('hide',s.convoy!=='yes');
+  $('sotCs').classList.toggle('hide',s.sot!=='responding');
+  $('sotWinchRow').classList.toggle('hide',s.sot!=='notneeded');
+  $('btnSameCrew').classList.toggle('hide',!store.get(KEY.crew,null));
+  $('kSunset').textContent=r.SUN.sunset!=null?hm(r.SUN.sunset):'—';
+  $('kDusk').textContent=r.SUN.dusk!=null?hm(r.SUN.dusk):'—';
+  $('kOut').textContent=hm(r.out);
+  $('kOut').style.color=r.out>r.SUN.dusk?'var(--red)':(r.SUN.dusk-r.out<60?'var(--amber)':'');
+  const M=moon(); $('kMoon').textContent=`${M.name} ${M.illum}%`;
+  if(d&&!d.empty){
+    $('kWind').textContent=`${d.dir} ${d.wind} / ${d.gust}`; $('kRain').textContent=d.pop+'%';
+    $('kWx').textContent=d.wx; $('kTemp').textContent=d.temp+'°C';
+    $('kTide').textContent=tideTxt(d); $('kWave').textContent=d.wave!=null?d.wave.toFixed(1)+' m':'n/a';
+  } else ['kWind','kRain','kWx','kTemp','kTide','kWave'].forEach(k=>$(k).textContent='—');
+  $('wxDot').className='dot'+(!DATA?' none':(Date.now()-DATA.at>6*36e5?' old':''));
+  $('wxSrc').textContent=DATA?`${DATA.loc.name} · synced ${ageText(Date.now()-DATA.at)}`:'No forecast saved – go back and sync';
+  $('kOverdue').textContent=hm(r.overdue);
+  COMMS.forEach(c=>{const el=$('pace_'+c.k),v=r.pc.map[c.k];el.textContent=v||'–';el.classList.toggle('set',!!v);});
+  $('commsMsg').innerHTML=r.pc.count<2?`<div class="flag">${r.pc.count} of 2 tested methods – can’t proceed</div>`:`<div class="todo">${r.pc.count} tested methods on separate networks ✓</div>`;
+  $('pA').textContent=s.job||'—'; $('pAta').textContent=hm(s.ta);
+  $('cDark').classList.toggle('hide',!(r.SUN.dusk!=null&&r.out>r.SUN.dusk));
+  $('bigScore').textContent=r.score; $('bigBand').textContent=BANDTXT[r.band]; $('bigBand').style.color=`var(--${r.band})`;
+  $('flagList').innerHTML=r.flags.map(f=>`<div class="flag">RED FLAG · ${esc(f)}</div>`).join('');
+  $('itemList').innerHTML=r.items.filter(i=>i.p).map(i=>`<li><span>${esc(i.l)}</span><b>${i.p>0?'+':''}${i.p}</b></li>`).join('')||'<li class="muted">No risk points</li>';
+  $('manageHint').textContent=r.band==='amber'?'Pick at least one control for an amber job.':r.band==='red'?'Controls won’t clear a red flag – change the plan.':'Optional for a green job.';
+  $('todoList').innerHTML=r.blocks.map(b=>`<div class="todo">${esc(b)}</div>`).join('');
+  const p=$('btnProceed'); p.disabled=false;
+  if(r.band==='red'){p.className='btn btn-red';p.textContent='Blocked – change the plan';p.disabled=true;}
+  else if(r.blocks.length){p.className='btn btn-ghost';p.textContent='Finish the items above';p.disabled=true;}
+  else if(r.band==='amber'){p.className='btn btn-amber';p.textContent='Confirm STOP 5 · send to DOM';}
+  else {p.className='btn btn-green';p.textContent='Confirm STOP 5 · proceed';}
+  $('btnSendAnyway').classList.toggle('hide',!(r.band==='green'&&!r.blocks.length));
+  return r;
+}
+
+/* ---------- messages ---------- */
+function smsLines(r){
+  const s=r.s, d=r.d;
+  const crossing=s.crossing!=='yes'?'None':({unknown:'Depth not checked',low:'<500 mm',mid:'500–700 mm',over:'>700 mm'}[s.depth]+(s.flowing?', flowing':', still'));
+  const commsTxt=s.comms.filter(c=>c.car).map(c=>{const v=r.pc.map[c.k];const n={grn:'GRN'+(c.extra?' TG '+c.extra:''),mob:'Mob',mdt:'MDT',sat:'Sat ph',msg:'Sat msgr',plb:'PLB'}[c.k];return (v?v+':':'')+n+(c.test&&c.k!=='plb'?' ✓':'');}).join(' / ');
+  const L=[];
+  L.push(`TERRA 4WD ACCESS REQ – ${BANDTXT[r.band].toUpperCase()} (${r.score}/60)`);
+  L.push(`Veh 1 [${s.v1num||'—'}]: ${s.v1names||'—'}`);
+  if(s.veh2!=='none') L.push(`Veh 2 [${s.v2num||'—'}]${s.veh2==='other'?' (not 4WD)':''}: ${s.v2names||'—'}`);
+  if(s.convoy==='yes') L.push(`Convoy: ${s.convSvc} ${s.convCs}${s.convStay?' (staying for egress)':' (not staying)'}`);
+  L.push(`4WD op/Mgr: ${s.op==='neither'?'Neither':s.opLabel} | SOT: ${s.sotLabel}${s.sot==='responding'&&s.sotCs?' '+s.sotCs:''}`);
+  L.push(`Job: ${s.job}`);
+  L.push(`Last light ${r.SUN.dusk!=null?hmc(r.SUN.dusk):'—'} | TA ${hmc(s.ta)} | Out by ${hmc(r.out)}`);
+  if(d&&!d.empty) L.push(`Wx: ${d.wx}, ${d.dir} ${d.wind} gust ${d.gust} km/h, rain ${d.pop}%, max ${d.temp}°C`);
+  else L.push('Wx: no forecast synced');
+  L.push(`FDR ${s.fdr||'—'} | ${s.toban?'TOBAN':'No TOBAN'}`);
+  if(s.beach&&d&&!d.empty) L.push(`Tide: ${tideTxt(d)}${d.wave!=null?' | waves '+d.wave.toFixed(1)+' m':''}`);
+  L.push(`Crossing: ${crossing}`);
+  L.push(`Red flags: ${r.flags.length?r.flags.join('; '):'none'} | STOP 5 ✓ ${stopTime!=null?hmc(stopTime):'—'}`);
+  L.push(`PACE: ${commsTxt||'—'}`);
+  L.push(`Check-in ${s.checkin} min | OVERDUE ${hmc(r.overdue)}`);
+  L.push('If overdue: PACE → Control → Police SAR');
+  L.push(`Plan A: ${s.job}, TA ${hmc(s.ta)}`);
+  L.push(`Plan B: Carry out to ${s.bPoint}${s.bDist?' (~'+s.bDist+')':''}${s.carriers==='no'?' + SES/RFS carriers':''} – if ${s.bTrig.toLowerCase()}`);
+  L.push(`Plan C: Helo winch at ${s.cSite} – if ${s.cTrig.toLowerCase()}`);
+  if(s.ctl.length) L.push(`Controls: ${s.ctl.join('; ')}`);
+  if(DATA) L.push(`Data synced ${ageText(Date.now()-DATA.at)}`);
+  L.push('Reply APPROVE or DECLINE');
+  return L;
+}
+const isIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const smsHref=t=>(isIOS?'sms:&body=':'sms:?body=')+encodeURIComponent(t);
+let cardBlob=null;
+function drawCard(r,lines){
+  const W=1080, padX=56, lh=46, c=document.createElement('canvas'), x=c.getContext('2d');
+  const font='500 34px Barlow, system-ui, sans-serif'; x.font=font;
+  const wrapped=[];
+  lines.slice(1,-1).forEach(l=>{const words=l.split(' ');let line='';
+    words.forEach(w=>{const t=line?line+' '+w:w;if(x.measureText(t).width>W-padX*2&&line){wrapped.push(line);line='  '+w;}else line=t;});wrapped.push(line);});
+  c.width=W; c.height=230+wrapped.length*lh+110;
+  x.fillStyle='#0d1316'; x.fillRect(0,0,W,c.height);
+  x.fillStyle={green:'#3fbf86',amber:'#e8ab2c',red:'#ef5350'}[r.band]; x.fillRect(0,0,W,180);
+  x.fillStyle=r.band==='red'?'#ffffff':'#101010';
+  x.font='700 46px "Barlow Condensed", system-ui, sans-serif'; x.fillText('TERRA · 4WD ACCESS REQUEST',padX,74);
+  x.font='700 84px "Barlow Condensed", system-ui, sans-serif'; x.fillText(`${BANDTXT[r.band].toUpperCase()}  ${r.score}/60`,padX,156);
+  x.font=font; x.fillStyle='#e7eff1'; wrapped.forEach((l,i)=>x.fillText(l,padX,240+i*lh));
+  x.fillStyle='#8fa5ac'; x.font='500 28px Barlow, system-ui, sans-serif';
+  x.fillText('Reply APPROVE or DECLINE · TERRA (training)',padX,c.height-48);
+  try{$('cardImg').src=c.toDataURL('image/png');}catch(e){}
+  cardBlob=null; try{c.toBlob(b=>{cardBlob=b;},'image/png');}catch(e){}
+  $('btnShareImg').classList.toggle('hide',!(navigator.canShare&&navigator.share));
+}
+async function copyText(text,msgEl,ok){
+  try{await navigator.clipboard.writeText(text);msgEl.textContent=ok;}
+  catch(e){msgEl.textContent='Copy blocked – press and hold the text to copy it.';}
+}
+
+/* ---------- records & crew memory ---------- */
+function saveCrew(s){store.set(KEY.crew,{v1num:s.v1num,v1names:s.v1names,veh2:s.veh2,v2num:s.v2num,v2names:s.v2names,op:s.op,tg:s.comms[0].extra,
+  comms:s.comms.map(c=>({k:c.k,car:c.car})),checkin:s.checkin});}
+function loadCrew(){
+  const c=store.get(KEY.crew,null); if(!c) return;
+  $('v1num').value=c.v1num||'';$('v1names').value=c.v1names||'';setSeg('veh2',c.veh2||'none');$('v2num').value=c.v2num||'';$('v2names').value=c.v2names||'';
+  setSeg('op',c.op||'op'); $('tg_grn').value=c.tg||'';
+  (c.comms||[]).forEach(x=>{const e=$('car_'+x.k);if(e)e.checked=x.car;});
+  if(c.checkin) $('checkin').value=String(c.checkin);
+  $('btnSameCrew').textContent='Same crew ✓ – now tick Tested on each radio/phone';
+}
+function saveRecord(r){
+  const p=localParts(new Date()), recs=store.get(KEY.recs,[]);
+  recs.unshift({date:`${pad(p.d)}/${pad(p.m)}`,time:hm(p.h*60+p.mi),job:r.s.job,crew:r.s.v1names,band:r.band,score:r.score,by:approval?approval.by:'',sms:smsLines(r).join('\n')});
+  store.set(KEY.recs,recs.slice(0,30));
+}
+
+/* ---------- navigation ---------- */
+function applyLocDefaults(force){
+  const l=currentLoc();
+  if(force||!$('jobLoc').value) $('jobLoc').value=l.name;
+  if(force||!$('cSite').value) $('cSite').value=`${l.lat.toFixed(4)}, ${l.lng.toFixed(4)}`;
+  if(force) setSeg('beach',l.beach?'yes':'no');
+}
+function go(i){
+  cur=i;
+  document.querySelectorAll('section.screen').forEach((s,j)=>s.classList.toggle('active',j===i));
+  $('hdrSub').textContent=SUB[i];
+  [...$('steps').children].forEach((d,j)=>d.classList.toggle('done',j<Math.min(i,6)));
+  $('nav').classList.toggle('hide',!(i>=1&&i<=3));
+  $('btnNext').textContent=i===3?'Go to STOP 5':'Next';
+  window.scrollTo(0,0);
+  const r=update();
+  if(i===0) renderSync();
+  if(i===5) prepSend(r);
+  if(i===6) prepActive(r);
+}
+function prepSend(r){
+  const L=smsLines(r), t=L.join('\n'); $('smsText').value=t; $('smsLink').href=smsHref(t);
+  $('declineMsg').classList.add('hide'); drawCard(r,L);
+}
+function prepActive(r){
+  const s=r.s, nm=nowMin();
+  $('aBand').textContent=`${BANDTXT[r.band]} · ${r.score}/60`; $('aBand').style.color=`var(--${r.band})`;
+  $('aBy').textContent=approval?`${approval.by} · ${hm(approval.at)}`:'Not required (green)';
+  $('aStop').textContent=stopTime!=null?hm(stopTime):'—';
+  $('aNext').textContent=hm(nm+s.checkin); $('aTa').textContent=hm(s.ta);
+  $('aDusk').textContent=r.SUN.dusk!=null?hm(r.SUN.dusk):'—'; $('aOver').textContent=hm(r.overdue);
+  const ct=`TERRA CLEAR – OUT OF AREA\nVeh 1 [${s.v1num}]: ${s.v1names}\nJob: ${s.job}\nClear at ${hmc(nm)}. Overdue watch (${hmc(r.overdue)}) can stand down.`;
+  $('clearText').value=ct; $('clearLink').href=smsHref(ct);
+  $('checkinLink').href=smsHref(checkinMsg(r));
+}
+const checkinMsg=r=>`TERRA CHECK-IN ${hmc(nowMin())} – Veh 1 [${r.s.v1num}] all OK at ${r.s.job}. Next check-in ${hmc(nowMin()+r.s.checkin)}. Overdue ${hmc(r.overdue)}.`;
+function resetJob(){
+  stopTime=null; approval=null;
+  ['flowing','toban','sotWinch'].forEach(id=>$(id).checked=false);
+  setSeg('crossing','no'); setSeg('depth','unknown'); setSeg('fdr',''); setSeg('sot','notconsidered'); setSeg('convoy','no');
+  document.querySelectorAll('.chip.on').forEach(c=>c.classList.remove('on'));
+  COMMS.forEach(c=>{const t=$('test_'+c.k); if(t) t.checked=false;});
+  ['bPoint','bDist','convCs','sotCs','domName'].forEach(id=>$(id).value='');
+  applyLocDefaults(true);
+  $('btnSameCrew').textContent='Same crew as last time';
+}
+
+document.addEventListener('click',e=>{
+  const sb=e.target.closest('.seg button');
+  if(sb){[...sb.parentNode.children].forEach(b=>b.classList.remove('on'));sb.classList.add('on');update();return;}
+  const ch=e.target.closest('.chip'); if(ch){ch.classList.toggle('on');update();}
+});
+document.addEventListener('input',update);
+document.addEventListener('change',update);
+$('locSel').addEventListener('change',()=>{const v=$('locSel').value; if(PRESETS[v]) store.set(KEY.loc,v);});
+$('btnBack').onclick=()=>go(Math.max(0,cur-1));
+$('btnNext').onclick=()=>go(Math.min(4,cur+1));
+$('btnStart').onclick=()=>{resetJob();go(1);};
+$('btnSync').onclick=()=>sync();
+$('btnSameCrew').onclick=()=>{loadCrew();update();};
+$('btnGpsWinch').onclick=async()=>{const b=$('btnGpsWinch');b.textContent='Getting GPS…';
+  try{const g=await getGPS();$('cSite').value=`${g.lat.toFixed(4)}, ${g.lng.toFixed(4)}`;b.textContent='GPS position set ✓';}
+  catch(err){b.textContent='GPS unavailable – type it in';} update();};
+$('btnProceed').onclick=()=>{const r=update(); if(r.band==='red'||r.blocks.length) return; stopTime=nowMin(); saveCrew(r.s);
+  if(r.band==='amber') go(5); else {saveRecord(r); go(6);} };
+$('btnSendAnyway').onclick=()=>{stopTime=nowMin();saveCrew(readState());go(5);};
+$('btnCopy').onclick=()=>copyText($('smsText').value,$('copyMsg'),'Copied – paste it into a text to the DOM.');
+$('btnShareImg').onclick=async()=>{try{if(!cardBlob)throw 0;const f=new File([cardBlob],'terra-request.png',{type:'image/png'});
+  if(navigator.canShare({files:[f]})) await navigator.share({files:[f],text:$('smsText').value}); else await navigator.share({text:$('smsText').value});}catch(e){}};
+$('btnApproved').onclick=()=>{approval={by:$('domName').value.trim()||'DOM',at:nowMin()};saveRecord(compute());go(6);};
+$('btnDeclined').onclick=()=>$('declineMsg').classList.remove('hide');
+$('btnChanged').onclick=()=>{stopTime=null;approval=null;maybeAutoSync();go(4);};
+$('btnCopyClear').onclick=()=>copyText($('clearText').value,$('clearMsg'),'Copied – send it to the DOM.');
+$('btnCheckin').onclick=()=>copyText(checkinMsg(compute()),$('clearMsg'),'Check-in message copied.');
+$('btnNewJob').onclick=()=>{resetJob();go(0);};
+
+/* auto-sync triggers */
+window.addEventListener('online',()=>{renderSync();maybeAutoSync();});
+window.addEventListener('offline',renderSync);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){renderSync();update();maybeAutoSync();}});
+setInterval(()=>{renderSync();update();maybeAutoSync();},5*60000);
+
+/* boot */
+const savedLoc=store.get(KEY.loc,'belmont'); if($('locSel').querySelector(`option[value="${savedLoc}"]`)) $('locSel').value=savedLoc;
+applyLocDefaults(true);
+go(0);
+if(DATA&&DATA.loc&&DATA.loc.key&&DATA.loc.key!==$('locSel').value&&PRESETS[DATA.loc.key]) $('locSel').value=DATA.loc.key;
+maybeAutoSync();
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
+})();
+</script>
+</body>
+</html>
