@@ -159,6 +159,9 @@ textarea{width:100%;min-height:300px;padding:12px;border-radius:8px;border:1px s
   <h1>Job &amp; route</h1>
   <div class="card">
     <div class="field"><label for="jobLoc">Destination</label><input type="text" id="jobLoc"></div>
+    <div class="field"><label for="staging">Staging area</label><input type="text" id="staging" placeholder="e.g. Kalaroo Rd car park, Redhead">
+      <button class="btn btn-ghost" id="btnGpsStage" style="min-height:44px;font-size:16px">Use my GPS position</button>
+      <p class="small muted">Where vehicles meet before going in. Sync here if it’s the last spot with signal.</p></div>
     <div class="row2">
       <div class="field"><label for="ta">Turnaround time</label><input type="time" id="ta" value="17:00"></div>
       <div class="field"><label for="egress">Drive out takes</label>
@@ -252,7 +255,7 @@ textarea{width:100%;min-height:300px;padding:12px;border-radius:8px;border:1px s
   <h1>Plans A, B &amp; C</h1>
   <div class="card">
     <h2>Plan A · Drive in and out</h2>
-    <ul class="list"><li><span>Route</span><b id="pA">—</b></li><li><span>Turnaround</span><b id="pAta">—</b></li></ul>
+    <ul class="list"><li><span>Staging</span><b id="pAst">—</b></li><li><span>Route</span><b id="pA">—</b></li><li><span>Turnaround</span><b id="pAta">—</b></li></ul>
   </div>
   <div class="card">
     <h2>Plan B · Carry out</h2>
@@ -553,7 +556,7 @@ const chips=n=>[...document.querySelectorAll(`[data-chips="${n}"] .chip.on`)].ma
 function setSeg(n,v){const w=document.querySelector(`[data-seg="${n}"]`);if(!w)return;[...w.children].forEach(b=>b.classList.toggle('on',b.dataset.v===v));}
 function readState(){
   return {
-    job:$('jobLoc').value.trim(), ta:toMin($('ta').value), egress:+$('egress').value,
+    job:$('jobLoc').value.trim(), staging:$('staging').value.trim(), ta:toMin($('ta').value), egress:+$('egress').value,
     beach:seg('beach')==='yes', crossing:seg('crossing'), depth:seg('depth'), flowing:$('flowing').checked,
     fdr:seg('fdr'), toban:$('toban').checked,
     v1num:$('v1num').value.trim(), v1names:$('v1names').value.trim(),
@@ -625,6 +628,7 @@ function compute(){
   const pc=pace(s);
   if(pc.count<2) flags.push(`Only ${pc.count} tested comms method${pc.count===1?'':'s'} on separate networks – need 2`);
   if(!s.job) blocks.push('Add the destination');
+  if(!s.staging) blocks.push('Add the staging area');
   if(!s.v1num) blocks.push('Add vehicle 1 number');
   if(!s.v1names) blocks.push('Add crew names for vehicle 1');
   if(s.veh2!=='none'&&!s.v2names) blocks.push('Add crew names for vehicle 2');
@@ -693,7 +697,7 @@ function update(){
   $('kOverdue').textContent=hm(r.overdue);
   COMMS.forEach(c=>{const el=$('pace_'+c.k),v=r.pc.map[c.k];el.textContent=v||'–';el.classList.toggle('set',!!v);});
   $('commsMsg').innerHTML=r.pc.count<2?`<div class="flag">${r.pc.count} of 2 tested methods – can’t proceed</div>`:`<div class="todo">${r.pc.count} tested methods on separate networks ✓</div>`;
-  $('pA').textContent=s.job||'—'; $('pAta').textContent=hm(s.ta);
+  $('pAst').textContent=s.staging||'—'; $('pA').textContent=s.job||'—'; $('pAta').textContent=hm(s.ta);
   $('cDark').classList.toggle('hide',!(r.SUN.dusk!=null&&r.out>r.SUN.dusk));
   $('bigScore').textContent=r.score; $('bigBand').textContent=BANDTXT[r.band]; $('bigBand').style.color=`var(--${r.band})`;
   $('flagList').innerHTML=r.flags.map(f=>`<div class="flag">RED FLAG · ${esc(f)}</div>`).join('');
@@ -721,6 +725,7 @@ function smsLines(r){
   if(s.convoy==='yes') L.push(`Convoy: ${s.convSvc} ${s.convCs}${s.convStay?' (staying for egress)':' (not staying)'}`);
   L.push(`4WD op/Mgr: ${s.op==='neither'?'Neither':s.opLabel} | SOT: ${s.sotLabel}${s.sot==='responding'&&s.sotCs?' '+s.sotCs:''}`);
   L.push(`Job: ${s.job}`);
+  L.push(`Staging: ${s.staging||'—'}`);
   L.push(`Last light ${r.SUN.dusk!=null?hmc(r.SUN.dusk):'—'} | TA ${hmc(s.ta)} | Out by ${hmc(r.out)}`);
   if(d&&!d.empty) L.push(`Wx: ${d.wx}, ${d.dir} ${d.wind} gust ${d.gust} km/h, rain ${d.pop}%, max ${d.temp}°C`);
   else L.push('Wx: no forecast synced');
@@ -731,7 +736,7 @@ function smsLines(r){
   L.push(`PACE: ${commsTxt||'—'}`);
   L.push(`Check-in ${s.checkin} min | OVERDUE ${hmc(r.overdue)}`);
   L.push('If overdue: PACE → Control → Police SAR');
-  L.push(`Plan A: ${s.job}, TA ${hmc(s.ta)}`);
+  L.push(`Plan A: ${s.staging?'From '+s.staging+' to ':''}${s.job}, TA ${hmc(s.ta)}`);
   L.push(`Plan B: Carry out to ${s.bPoint}${s.bDist?' (~'+s.bDist+')':''}${s.carriers==='no'?' + SES/RFS carriers':''} – if ${s.bTrig.toLowerCase()}`);
   L.push(`Plan C: Helo winch at ${s.cSite} – if ${s.cTrig.toLowerCase()}`);
   if(s.ctl.length) L.push(`Controls: ${s.ctl.join('; ')}`);
@@ -843,6 +848,9 @@ $('btnNext').onclick=()=>go(Math.min(4,cur+1));
 $('btnStart').onclick=()=>{resetJob();go(1);};
 $('btnSync').onclick=()=>sync();
 $('btnSameCrew').onclick=()=>{loadCrew();update();};
+$('btnGpsStage').onclick=async()=>{const b=$('btnGpsStage');b.textContent='Getting GPS…';
+  try{const g=await getGPS();$('staging').value=($('staging').value?$('staging').value.replace(/\s*\(-?\d.*\)$/,'')+' ':'')+`(${g.lat.toFixed(4)}, ${g.lng.toFixed(4)})`;b.textContent='GPS position added ✓';}
+  catch(err){b.textContent='GPS unavailable – type it in';} update();};
 $('btnGpsWinch').onclick=async()=>{const b=$('btnGpsWinch');b.textContent='Getting GPS…';
   try{const g=await getGPS();$('cSite').value=`${g.lat.toFixed(4)}, ${g.lng.toFixed(4)}`;b.textContent='GPS position set ✓';}
   catch(err){b.textContent='GPS unavailable – type it in';} update();};
